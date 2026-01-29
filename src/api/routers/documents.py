@@ -112,3 +112,131 @@ async def delete_document(
     document_service.delete_document(db, document)
     
     return MessageResponse(message=f"Document '{filename}' deleted successfully")
+
+
+# Import processing schemas
+from src.api.schemas.chunk import (
+    ProcessingResponse,
+    ChunkResponse,
+    ChunkListResponse,
+    ChunkStatsResponse
+)
+from src.models import DocumentChunk
+from src.services.processing_service import DocumentProcessor
+from sqlalchemy import func
+
+
+@router.post("/documents/{document_id}/process", response_model=ProcessingResponse)
+async def process_document(
+    document: Document = Depends(get_document_or_404),
+    db: Session = Depends(get_db)
+):
+    """
+    Process uploaded document: parse and classify content.
+    
+    This endpoint:
+    1. Parses the document (PDF/DOCX/PPT)
+    2. Extracts text chunks
+    3. Classifies each chunk into content types
+    4. Saves chunks to database
+    """
+    # Check if already processed
+    if document.processing_status == 'completed':
+        chunk_count = db.query(DocumentChunk).filter(
+            DocumentChunk.document_id == document.id
+        ).count()
+        
+        return ProcessingResponse(
+            document_id=document.id,
+            status='completed',
+            chunks_created=chunk_count,
+            message=f"Document already processed with {chunk_count} chunks"
+        )
+    
+    # Process document
+    processor = DocumentProcessor()
+    try:
+        chunk_count = processor.process_document(db, document)
+        
+        return ProcessingResponse(
+            document_id=document.id,
+            status='completed',
+            chunks_created=chunk_count,
+            message=f"Successfully processed document into {chunk_count} chunks"
+        )
+    except Exception as e:
+        return ProcessingResponse(
+            document_id=document.id,
+            status='failed',
+            chunks_created=0,
+            message=f"Processing failed: {str(e)}"
+        )
+
+
+@router.get("/documents/{document_id}/chunks", response_model=ChunkListResponse)
+async def get_document_chunks(
+    document_id: str,
+    content_type: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all chunks for a document.
+    
+    - **content_type**: Optional filter by content type (concept, formula, definition, example, pyq, highlight)
+    - **skip**: Number of records to skip (pagination)
+    - **limit**: Maximum number of records to return
+    """
+    query = db.query(DocumentChunk).filter(DocumentChunk.document_id == document_id)
+    
+    # Filter by content type if specified
+    if content_type:
+        query = query.filter(DocumentChunk.content_type == content_type)
+    
+    # Order by chunk index
+    query = query.order_by(DocumentChunk.chunk_index)
+    
+    total = query.count()
+    chunks = query.offset(skip).limit(limit).all()
+    
+    return ChunkListResponse(
+        chunks=[ChunkResponse(**chunk.__dict__) for chunk in chunks],
+        total=total
+    )
+
+
+@router.get("/documents/{document_id}/chunks/stats", response_model=ChunkStatsResponse)
+async def get_chunk_stats(
+    document_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get statistics about chunks in a document.
+    
+    Returns counts by content type and average confidence score.
+    """
+    # Get chunks grouped by content type
+    type_counts = db.query(
+        DocumentChunk.content_type,
+        func.count(DocumentChunk.id).label('count')
+    ).filter(
+        DocumentChunk.document_id == document_id
+    ).group_by(DocumentChunk.content_type).all()
+    
+    by_type = {content_type: count for content_type, count in type_counts}
+    total_chunks = sum(by_type.values())
+    
+    # Calculate average confidence
+    avg_confidence = db.query(
+        func.avg(DocumentChunk.confidence_score)
+    ).filter(
+        DocumentChunk.document_id == document_id
+    ).scalar() or 0.0
+    
+    return ChunkStatsResponse(
+        document_id=document_id,
+        total_chunks=total_chunks,
+        by_type=by_type,
+        avg_confidence=round(avg_confidence, 2)
+    )

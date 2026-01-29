@@ -12,6 +12,12 @@ from src.api.schemas.document import (
     DocumentStatusResponse,
     DocumentListResponse
 )
+from src.api.schemas.chunk import (
+    ChunkResponse,
+    ChunkListResponse,
+    ChunkStatsResponse,
+    ProcessingResponse
+)
 
 __all__ = [
     "ErrorResponse",
@@ -25,4 +31,8 @@ __all__ = [
     "DocumentResponse",
     "DocumentStatusResponse",
     "DocumentListResponse",
+    "ChunkResponse",
+    "ChunkListResponse",
+    "ChunkStatsResponse",
+    "ProcessingResponse",
 ]
