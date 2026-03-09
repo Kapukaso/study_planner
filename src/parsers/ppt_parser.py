@@ -25,15 +25,31 @@ class PPTParser(BaseParser):
             
             for slide_num, slide in enumerate(prs.slides, start=1):
                 # Extract text from all shapes in slide
-                slide_text = []
+                slide_text_parts = []
+                shape_info = []
                 
                 for shape in slide.shapes:
                     if hasattr(shape, "text") and shape.text.strip():
-                        slide_text.append(shape.text.strip())
+                        slide_text_parts.append(shape.text.strip())
+                        shape_info.append({
+                            'type': 'textbox',
+                            'has_text': True
+                        })
+                    elif hasattr(shape, "image"):
+                        # Note: images are present but we can't extract text from them
+                        shape_info.append({
+                            'type': 'image',
+                            'has_text': False
+                        })
+                    else:
+                        shape_info.append({
+                            'type': 'other',
+                            'has_text': False
+                        })
                 
                 # Combine slide text
-                if slide_text:
-                    text = '\n\n'.join(slide_text)
+                if slide_text_parts:
+                    text = '\n\n'.join(slide_text_parts)
                     cleaned_text = self.clean_text(text)
                     
                     if cleaned_text:
@@ -43,8 +59,11 @@ class PPTParser(BaseParser):
                             chunk_index=slide_num - 1,
                             metadata={
                                 'slide_number': slide_num,
-                                'shape_count': len(slide.shapes),
-                                'parser': 'python-pptx'
+                                'total_shapes': len(slide.shapes),
+                                'text_shapes': len([s for s in shape_info if s['has_text']]),
+                                'image_shapes': len([s for s in shape_info if s['type'] == 'image']),
+                                'parser': 'python-pptx',
+                                'slide_title': slide.shapes.title.text if slide.shapes.title else None
                             }
                         )
                         chunks.append(chunk)

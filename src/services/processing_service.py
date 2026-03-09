@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from src.models import Document, DocumentChunk
-from src.parsers import PDFParser, DOCXParser, PPTParser
+from src.parsers import PDFParser, DOCXParser, PPTParser, ImageParser
 from src.classifier import ContentClassifier
 
 
@@ -14,6 +14,7 @@ class DocumentProcessor:
         self.pdf_parser = PDFParser()
         self.docx_parser = DOCXParser()
         self.ppt_parser = PPTParser()
+        self.image_parser = ImageParser()
         self.classifier = ContentClassifier()
     
     def process_document(self, db: Session, document: Document) -> int:
@@ -66,6 +67,8 @@ class DocumentProcessor:
             return self.docx_parser.parse(document.file_path)
         elif file_type in ['pptx', 'ppt']:
             return self.ppt_parser.parse(document.file_path)
+        elif file_type in ['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'tif']:
+            return self.image_parser.parse(document.file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
     
