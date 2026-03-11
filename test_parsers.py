@@ -6,6 +6,8 @@ from pathlib import Path
 from src.parsers.pdf_parser import PDFParser
 from src.parsers.docx_parser import DOCXParser
 from src.parsers.ppt_parser import PPTParser
+from src.parsers.image_parser import ImageParser
+from PIL import Image, ImageDraw, ImageFont
 
 
 def test_pdf_parser():
@@ -26,15 +28,16 @@ def test_pdf_parser():
         c.drawString(50, 720, "This is a second line of text.")
         c.save()
 
-        print("PDF Parser: Found {} chunks".format(len(chunks)))
+        chunks = parser.parse(pdf_path)
+        print(f"PDF Parser: Found {len(chunks)} chunks")
 
         if chunks:
-            print("First chunk text: {}...".format(chunks[0].text[:100]))
-            print("Metadata: {}".format(chunks[0].metadata))
+            print(f"First chunk text: {chunks[0].text[:100]}...")
+            print(f"Metadata: {chunks[0].metadata}")
 
         # Test page count
         page_count = parser.get_page_count(pdf_path)
-        print("PDF pages: {}".format(page_count))
+        print(f"PDF pages: {page_count}")
 
         # Cleanup
         os.unlink(pdf_path)
@@ -44,7 +47,7 @@ def test_pdf_parser():
         print("PDF Parser: reportlab not available, skipping PDF creation test")
         return True
     except Exception as e:
-        print("PDF Parser test failed: {}".format(e))
+        print(f"PDF Parser test failed: {e}")
         return False
 
 
@@ -73,15 +76,16 @@ def test_docx_parser():
 
         doc.save(docx_path)
 
-        print("DOCX Parser: Found {} chunks".format(len(chunks)))
+        chunks = parser.parse(docx_path)
+        print(f"DOCX Parser: Found {len(chunks)} chunks")
 
         if chunks:
-            print("First chunk text: {}...".format(chunks[0].text[:100]))
-            print("Metadata: {}".format(chunks[0].metadata))
+            print(f"First chunk text: {chunks[0].text[:100]}...")
+            print(f"Metadata: {chunks[0].metadata}")
 
         # Test heading extraction
         headings = parser.extract_headings(docx_path)
-        print("Headings found: {}".format(headings))
+        print(f"Headings found: {headings}")
 
         # Cleanup
         os.unlink(docx_path)
@@ -91,7 +95,7 @@ def test_docx_parser():
         print("DOCX Parser: python-docx not available")
         return False
     except Exception as e:
-        print("DOCX Parser test failed: {}".format(e))
+        print(f"DOCX Parser test failed: {e}")
         return False
 
 
@@ -117,15 +121,16 @@ def test_ppt_parser():
 
         prs.save(pptx_path)
 
-        print("PPT Parser: Found {} chunks".format(len(chunks)))
+        chunks = parser.parse(pptx_path)
+        print(f"PPT Parser: Found {len(chunks)} chunks")
 
         if chunks:
-            print("First chunk text: {}...".format(chunks[0].text[:100]))
-            print("Metadata: {}".format(chunks[0].metadata))
+            print(f"First chunk text: {chunks[0].text[:100]}...")
+            print(f"Metadata: {chunks[0].metadata}")
 
         # Test slide count
         slide_count = parser.get_slide_count(pptx_path)
-        print("PPT slides: {}".format(slide_count))
+        print(f"PPT slides: {slide_count}")
 
         # Cleanup
         os.unlink(pptx_path)
@@ -135,7 +140,60 @@ def test_ppt_parser():
         print("PPT Parser: python-pptx not available")
         return False
     except Exception as e:
-        print("PPT Parser test failed: {}".format(e))
+        print(f"PPT Parser test failed: {e}")
+        return False
+
+
+def test_image_parser():
+    """Test Image parser with basic functionality."""
+    parser = ImageParser()
+    if not parser.tesseract_available:
+        print("Image Parser: Tesseract not available, skipping test.")
+        return True  # Skip test if OCR is not available
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            image_path = tmp.name
+
+        # Create a simple image with text
+        img = Image.new('RGB', (400, 100), color='white')
+        draw = ImageDraw.Draw(img)
+        try:
+            font = ImageFont.truetype("arial.ttf", 15)
+        except IOError:
+            font = ImageFont.load_default()
+        
+        test_text = "This is a test image for OCR."
+        draw.text((10, 10), test_text, fill='black', font=font)
+        img.save(image_path)
+
+        # Parse the image
+        chunks = parser.parse(image_path)
+        print(f"Image Parser: Found {len(chunks)} chunks")
+
+        assert len(chunks) > 0, "Parser should find at least one chunk."
+        
+        # The OCR might not be perfect, so we check for containment
+        full_text = " ".join(c.text for c in chunks)
+        print(f"Extracted text: {full_text}")
+        # A simple check to see if most of the text was extracted
+        assert "test image for OCR" in full_text, "Extracted text does not match expected content."
+
+        if chunks:
+            print(f"First chunk text: {chunks[0].text[:100]}...")
+            print(f"Metadata: {chunks[0].metadata}")
+            assert 'ocr_confidence' in chunks[0].metadata
+            assert chunks[0].metadata['ocr_confidence'] > 0
+
+        # Cleanup
+        os.unlink(image_path)
+        return True
+
+    except Exception as e:
+        print(f"Image Parser test failed: {e}")
+        # Cleanup in case of failure
+        if 'image_path' in locals() and os.path.exists(image_path):
+            os.unlink(image_path)
         return False
 
 
@@ -154,12 +212,14 @@ if __name__ == "__main__":
     print("\n3. Testing PPT Parser...")
     results.append(("PPT Parser", test_ppt_parser()))
 
+    print("\n4. Testing Image Parser...")
+    results.append(("Image Parser", test_image_parser()))
+
     print("\n" + "=" * 50)
     print("Test Results:")
     for name, success in results:
         status = "PASS" if success else "FAIL"
-        print("{}: {}".format(name, status))
+        print(f"{name}: {status}")
 
     passed = sum(1 for _, success in results if success)
-    print("\nPassed: " + str(passed) + "/" + str(len(results)) + " tests")</content>
-<parameter name="filePath">f:\Projects\studyPlanner\test_parsers.py
+    print(f"\nPassed: {passed}/{len(results)} tests")

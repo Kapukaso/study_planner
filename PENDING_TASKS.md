@@ -15,12 +15,12 @@
 ### **1. Complete Document Processing Pipeline**
 - [x] **Implement DOCX Parser**: Complete `src/parsers/docx_parser.py` - Enhanced with table support and better metadata
 - [x] **Implement PPT Parser**: Complete `src/parsers/ppt_parser.py` - Enhanced with shape analysis and slide metadata
-- [ ] **Test OCR Integration**: Verify Tesseract setup and image processing
-- [ ] **Add Image Parser**: Support for scanned documents and images
+- [x] **Test OCR Integration**: Verify Tesseract setup and image processing
+- [x] **Add Image Parser**: Support for scanned documents and images
 - [ ] **Error Handling**: Robust error handling for corrupted files
 
 ### **2. Content Classification Engine**
-- [ ] **Enhance Rule-Based Classifier**: Improve accuracy in `src/classifier/`
+- [x] **Enhance Rule-Based Classifier**: Improve accuracy in `src/classifier/`
 - [ ] **Add ML Classification**: Integrate spaCy/transformers for better accuracy
 - [ ] **Train Classification Model**: Create training data and model
 - [ ] **Confidence Scoring**: Improve confidence metrics for classifications
@@ -34,11 +34,11 @@
 ## 🔒 **Security & Authentication**
 
 ### **4. User Management System**
-- [ ] **Authentication**: Implement JWT/OAuth authentication
-- [ ] **User Registration**: Sign-up and email verification
-- [ ] **Password Security**: Proper hashing and password policies
-- [ ] **Session Management**: Secure session handling
-- [ ] **Role-Based Access**: Admin/user permissions
+- [x] **Authentication**: Implement JWT/OAuth authentication
+- [x] **User Registration**: Sign-up and email verification
+- [x] **Password Security**: Proper hashing and password policies
+- [x] **Session Management**: Secure session handling
+- [x] **Role-Based Access**: Admin/user permissions
 
 ### **5. Security Hardening**
 - [ ] **Input Validation**: Sanitize all user inputs

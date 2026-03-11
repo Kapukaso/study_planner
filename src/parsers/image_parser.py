@@ -1,110 +1,131 @@
 """Image parser using Tesseract OCR."""
-import os
+import logging
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any, Tuple
 from PIL import Image
+import pandas as pd
 
 from src.parsers.base_parser import BaseParser, ParsedChunk
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ImageParser(BaseParser):
     """Parser for image files using OCR."""
 
-    def __init__(self):
+    def __init__(self, chunk_size: int = 1000):
         self.tesseract_available = self._check_tesseract()
+        self.chunk_size = chunk_size
+        if not self.tesseract_available:
+            logger.warning(
+                "Tesseract is not available or not configured correctly. "
+                "Image parsing will not be possible."
+            )
 
     def _check_tesseract(self) -> bool:
         """Check if Tesseract is available."""
         try:
             import pytesseract
-            # Try to get version to verify Tesseract binary is installed
             pytesseract.get_tesseract_version()
             return True
         except ImportError:
+            logger.error("pytesseract library not found. Please install it.")
             return False
-        except Exception:
+        except Exception as e:
+            logger.error(f"Tesseract is not installed or not in your PATH: {e}")
             return False
 
     def parse(self, file_path: str) -> List[ParsedChunk]:
         """
-        Parse image file using OCR.
+        Parse an image file using OCR, chunk the text, and return ParsedChunk objects.
 
         Args:
-            file_path: Path to image file
+            file_path: Path to the image file.
 
         Returns:
-            List of ParsedChunk objects
+            A list of ParsedChunk objects.
         """
         if not self.tesseract_available:
-            raise ValueError("Tesseract OCR not available. Please install Tesseract and pytesseract.")
+            raise EnvironmentError("Tesseract OCR is not available.")
 
+        logger.info(f"Parsing image file: {file_path}")
         try:
-            import pytesseract
-
-            # Open image
             image = Image.open(file_path)
+            full_text, avg_confidence = self._get_ocr_data(image)
 
-            # Extract text using OCR
-            text = pytesseract.image_to_string(image)
-
-            if not text.strip():
-                # No text found
+            if not full_text.strip():
+                logger.info("No text found in the image.")
                 return []
 
-            # Clean the text
-            cleaned_text = self.clean_text(text)
+            cleaned_text = self.clean_text(full_text)
+            text_chunks = self.chunk_by_paragraphs(cleaned_text, self.chunk_size)
 
-            if not cleaned_text:
-                return []
+            parsed_chunks = []
+            for i, text_chunk in enumerate(text_chunks):
+                chunk = ParsedChunk(
+                    text=text_chunk,
+                    page_number=1,  # Images are single-page
+                    chunk_index=i,
+                    metadata=self._create_chunk_metadata(image, avg_confidence)
+                )
+                parsed_chunks.append(chunk)
 
-            # Create chunk
-            chunk = ParsedChunk(
-                text=cleaned_text,
-                page_number=1,  # Images are treated as single "pages"
-                chunk_index=0,
-                metadata={
-                    'image_width': image.width,
-                    'image_height': image.height,
-                    'image_format': image.format,
-                    'image_mode': image.mode,
-                    'parser': 'tesseract-ocr',
-                    'ocr_confidence': self._get_confidence_score(text)
-                }
-            )
+            logger.info(f"Successfully parsed image and created {len(parsed_chunks)} chunks.")
+            return parsed_chunks
 
-            return [chunk]
-
+        except FileNotFoundError:
+            logger.error(f"File not found: {file_path}")
+            raise
         except Exception as e:
-            raise ValueError(f"Error parsing image with OCR: {str(e)}")
+            logger.error(f"Error parsing image with OCR: {e}")
+            raise ValueError(f"Failed to parse image {file_path}: {e}")
 
-    def _get_confidence_score(self, text: str) -> float:
+    def _get_ocr_data(self, image: Image.Image) -> Tuple[str, float]:
         """
-        Get a rough confidence score based on text characteristics.
-        This is a simple heuristic since pytesseract doesn't provide
-        confidence scores in image_to_string by default.
+        Extract text and calculate average confidence using pytesseract.
+
+        Args:
+            image: A PIL Image object.
+
+        Returns:
+            A tuple containing the full extracted text and the average confidence score.
         """
-        if not text.strip():
-            return 0.0
+        import pytesseract
+        
+        # Use image_to_data to get detailed information including confidence scores
+        data = pytesseract.image_to_data(
+            image, output_type=pytesseract.Output.DATAFRAME
+        )
+        
+        # Filter out entries with negative confidence (these are not words)
+        data = data[data.conf != -1]
+        
+        # Calculate average confidence
+        avg_confidence = data['conf'].mean() if not data.empty else 0.0
+        
+        # Reconstruct the text from the data
+        full_text = " ".join(data['text'].dropna())
+        
+        return full_text, round(avg_confidence, 2)
 
-        # Simple heuristics for confidence
-        word_count = len(text.split())
-        char_count = len(text)
-
-        # Very short text = low confidence
-        if char_count < 10:
-            return 0.2
-        # Short text = medium confidence
-        elif char_count < 50:
-            return 0.5
-        # Longer text = higher confidence
-        else:
-            return 0.8
+    def _create_chunk_metadata(self, image: Image.Image, avg_confidence: float) -> Dict[str, Any]:
+        """Create metadata dictionary for a parsed chunk."""
+        return {
+            'image_width': image.width,
+            'image_height': image.height,
+            'image_format': image.format,
+            'image_mode': image.mode,
+            'parser': 'tesseract-ocr',
+            'ocr_confidence': avg_confidence,
+        }
 
     def get_supported_formats(self) -> List[str]:
-        """Get list of supported image formats."""
+        """Get a list of supported image formats."""
         return ['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'tif']
 
     def is_image_file(self, file_path: str) -> bool:
-        """Check if file is a supported image format."""
+        """Check if a file is a supported image format."""
         ext = Path(file_path).suffix.lower().lstrip('.')
         return ext in self.get_supported_formats()

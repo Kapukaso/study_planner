@@ -5,51 +5,59 @@ import re
 CONTENT_KEYWORDS = {
     'concept': [
         'is defined as', 'refers to', 'concept of', 'introduction to',
-        'overview', 'understanding', 'explained', 'meaning', 'describes'
+        'overview', 'understanding', 'explained', 'meaning', 'describes',
+        'theory', 'principle', 'model', 'framework', 'approach'
     ],
     
     'definition': [
         'definition', 'is defined as', 'means', 'is called', 'known as',
-        'termed as', 'refers to as', 'is the', 'can be defined'
+        'termed as', 'refers to as', 'is the', 'can be defined', 'stands for'
     ],
     
     'formula': [
         'formula', 'equation', 'calculate', 'computation', 'mathematical',
-        'expression', 'theorem', 'proof', 'derive'
+        'expression', 'theorem', 'proof', 'derive', 'given by', 'where'
     ],
     
     'example': [
         'example', 'for instance', 'e.g.', 'such as', 'for example',
-        'instance', 'illustrated', 'demonstration', 'case study'
+        'instance', 'illustrated', 'demonstration', 'case study', 'consider'
     ],
     
     'pyq': [
         'question', 'q.', 'q)', 'marks', 'exam', 'test', 'answer',
-        'solve', 'explain', 'discuss', 'what', 'why', 'how'
+        'solve', 'explain', 'discuss', 'what', 'why', 'how', 'calculate',
+        'find', 'determine', 'compare', 'contrast'
     ],
     
     'highlight': [
         'important', 'note', 'remember', 'key point', 'crucial',
-        'significant', 'essential', 'must', 'never forget', 'always'
+        'significant', 'essential', 'must', 'never forget', 'always',
+        'in particular', 'takeaway'
+    ],
+
+    'summary': [
+        'summary', 'in summary', 'in conclusion', 'to conclude', 'key takeaways',
+        'tl;dr', 'in short', 'briefly', 'overall', 'in essence'
     ]
 }
 
 # Regex patterns for content detection
 PATTERNS = {
     # Mathematical formulas: contains =, symbols, equations
-    'formula_symbols': r'[=∑∫∏√±≈≠≤≥∞πΔθλμσΩ]|\\frac|\\int|\\sum',
+    'formula_symbols': r'[=∑∫∏√±≈≠≤≥∞πΔθλμσΩ\+\-\*/\^]|\\frac|\\int|\\sum',
     
     # Formula variables: x, y, a, b with subscripts/superscripts
-    'formula_vars': r'\b[a-zA-Z][_\d]*\s*=\s*',
+    'formula_vars': r'\b[a-zA-Z]_\d*\s*=\s*|\b[a-zA-Z]\s*=\s*[0-9]',
     
     # Definition pattern: "Term: explanation" or "Term - explanation"
-    'definition_colon': r'^[A-Z][A-Za-z\s]+:\s+',
-    'definition_dash': r'^[A-Z][A-Za-z\s]+\s+-\s+',
+    'definition_colon': r'^\s*[A-Z][A-Za-z\s]+:\s+',
+    'definition_dash': r'^\s*[A-Z][A-Za-z\s]+\s+-\s+',
     
     # Question patterns
     'question_mark': r'\?$',
     'question_start': r'^(Q\.|Q\d+|Question\s+\d+)',
-    'question_keywords': r'\b(what|why|how|when|where|who|which|explain|discuss|describe|define)\b',
+    'question_keywords': r'\b(what|why|how|when|where|who|which|explain|discuss|describe|define|calculate|find|determine)\b',
     
     # Marks indication: (5 marks), [10M], etc.
     'marks': r'\((\d+)\s*(marks|M|m)\)|\[(\d+)M\]',
@@ -62,7 +70,10 @@ PATTERNS = {
     
     # Highlight markers: bullet points, asterisks
     'bullet': r'^\s*[•●○■□▪▫-]\s+',
-    'emphasis': r'\*\*.*?\*\*|\*.*?\*'
+    'emphasis': r'\*\*.*?\*\*|\*.*?\*',
+
+    # Summary markers
+    'summary_marker': r'^(Summary|Conclusion|In conclusion|Key Takeaways):?'
 }
 
 
@@ -121,6 +132,10 @@ def has_highlight_markers(text: str) -> bool:
         COMPILED_PATTERNS['bullet'].match(text) or
         COMPILED_PATTERNS['emphasis'].search(text)
     )
+
+def has_summary_marker(text: str) -> bool:
+    """Check if text starts with a summary marker."""
+    return bool(COMPILED_PATTERNS['summary_marker'].match(text))
 
 
 def count_keyword_matches(text: str, keywords: list) -> int:

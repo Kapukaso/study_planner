@@ -2,10 +2,11 @@
 from typing import Tuple
 from src.classifier.rules import (
     is_formula,
-   is_definition,
+    is_definition,
     is_question,
     is_example,
     is_highlight,
+    is_summary,
     is_concept
 )
 
@@ -20,6 +21,7 @@ class ContentClassifier:
         ('pyq', is_question),
         ('example', is_example),
         ('highlight', is_highlight),
+        ('summary', is_summary),
         ('concept', is_concept),
     ]
     

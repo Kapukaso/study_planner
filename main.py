@@ -62,10 +62,11 @@ async def root():
 
 
 # Import and include routers FIRST (before static files)
-from src.api.routers import subjects, documents
+from src.api.routers import subjects, documents, auth
 
 app.include_router(subjects.router, prefix="/api", tags=["Subjects"])
 app.include_router(documents.router, prefix="/api", tags=["Documents"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 
 # Mount static files for frontend LAST (catch-all)
 from fastapi.staticfiles import StaticFiles
