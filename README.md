@@ -1,176 +1,174 @@
-# Study Planner System
+# 🎓 Study Planner: AI-Powered Learning Ecosystem
 
-An AI-powered study planner that ingests subject-wise documents and automatically generates notes, cheatsheets, previous-year questions, and personalized timetables.
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
 
-## 🎯 Project Status: Phase 2 Complete
-
-### ✅ What's Working
-
-**Frontend (New!)**
-- ✅ **React + Vite + TypeScript** modern architecture.
-- ✅ **Glassmorphism UI** with Tailwind CSS (Indigo/Violet dark theme).
-- ✅ **Interactive Dashboard** with subject statistics.
-- ✅ **Resource Viewer**: Tabbed interface for Documents, Notes, Flashcards, and PYQs.
-- ✅ **Active Recall**: Interactive 3D flip-cards for flashcard study.
-- ✅ **Topic-based Navigation**: Sidebar for navigating auto-generated knowledge topics.
-
-**Database Infrastructure**
-- ✅ Complete SQLAlchemy ORM with 14 interconnected tables.
-- ✅ SQLite for local development (PostgreSQL-ready).
-- ✅ Database initialization and seeding scripts.
-- ✅ Sample data: Operating Systems subject with topics, notes, cheatsheets, PYQs.
-
-**REST API with FastAPI**
-- ✅ **Authentication**: Secure JWT-based auth with SHA256 hashing.
-- ✅ **Subject & Topic Management**: Full hierarchy navigation.
-- ✅ **Document Processing**: Pipeline for PDF/DOCX/PPT parsing and content classification.
-- ✅ **Resource API**: Endpoints for fetching auto-generated Notes, Flashcards, and PYQs.
-- ✅ **Auto-generated API docs** at `/docs`.
-
-**Core Features**
-- ✅ PDF/DOCX text extraction engine.
-- ✅ Content classification (concepts, formulas, definitions, PYQs).
-- ✅ Knowledge structure extraction (auto-creating chapters and topics).
-- ✅ Resource generation models (Notes, Cheatsheets, PYQs, Flashcards).
+An intelligent educational platform that transforms raw study materials into a structured knowledge base. Upload your PDFs, Word documents, or PowerPoints, and watch as the system automatically generates comprehensive notes, interactive flashcards, cheatsheets, and a personalized study timetable.
 
 ---
 
-## 🚀 Quick Start
+## ✨ Key Features
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+ & npm
+### 📂 Intelligent Document Ingestion
+- **Multi-Format Support**: Seamlessly process PDF, DOCX, PPTX, and Image files.
+- **OCR Integration**: Built-in Tesseract OCR support for scanned documents and images.
+- **Structural Parsing**: Preserves document hierarchy, slide titles, and table structures.
 
-### Backend Installation
+### 🧠 Content Classification Engine
+- **Automated Chunking**: Intelligently segments long documents into manageable text chunks using structural markers.
+- **Priority-Based Labeling**: Employs a deterministic classification hierarchy:
+  1. 📐 **Formulas**: Identified via mathematical symbols (`=`, `+`, `Σ`, etc.) and variable relationships.
+  2. 📖 **Definitions**: Extracted using linguistic patterns (e.g., *"X is defined as Y"*, *"X refers to Y"*).
+  3. ❓ **PYQs**: Detected through examination-specific keywords and year markers (e.g., *"2023"*, *"10 Marks"*).
+  4. 💡 **Examples**: Isolated through contextual triggers like *"For instance"*, *"Consider a scenario"*.
+  5. ⭐ **Highlights**: Critical information tagged by emphasis markers and bold text.
+  6. 📝 **Concepts**: Default classification for foundational theoretical content.
 
-```bash
-# Clone the repository
-git clone <repo-url>
-cd studyPlanner
+### 🛠️ Resource Generation Logic
+- **Regex-Powered Flashcards**: Automatically transforms definitions and formulas into Q&A pairs by splitting text on linguistic pivots (e.g., *"is"*, *"means"*, *"="*).
+- **Extractive Notes**: Compiles high-confidence chunks into structured Markdown notes, preserving the original pedagogical flow.
+- **Smart PYQ Extraction**: Parses year and mark information from question text to help prioritize exam preparation.
+- **Automated Cheatsheets**: Aggregates all extracted formulas and key definitions into a condensed, one-page summary for rapid review.
 
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Initialize database
-python scripts/init_db.py
-
-# Seed with sample data
-python scripts/seed_db.py
-```
-
-### Frontend Installation
-
-```bash
-cd frontend
-npm install
-npm run build  # For production
-```
-
-### Run the System
-
-1. **Production Mode**:
-   ```bash
-   # Run from root directory
-   uvicorn main:app --reload
-   ```
-   Access at: **http://127.0.0.1:8000** (FastAPI serves the React build)
-
-2. **Development Mode**:
-   - Backend: `uvicorn main:app --reload` (Port 8000)
-   - Frontend: `cd frontend && npm run dev` (Port 5173 - proxies API to 8000)
+### 📅 Personalized Study Planning
+- **Automated Timetables**: Generates optimized study schedules based on exam dates and subject priority.
+- **Difficulty Estimation**: Calculates study time requirements using content complexity and topic length.
+- **Progress Tracking**: Monitor your mastery across subjects, chapters, and topics.
 
 ---
 
-## 📚 API Endpoints
+## 🏗️ System Architecture
 
-### Authentication
-```
-POST /api/auth/register - Register new user
-POST /api/auth/login    - Get access token
-GET  /api/auth/users/me - Get current user profile
-```
+### Subsystems
+1.  **Document Parser**: Multi-threaded extraction engine (PDF/Word/PPT).
+2.  **Content Classifier**: Rule-based + ML hybrid system for text categorization.
+3.  **Knowledge Extractor**: Maps dependencies and structures topics into a hierarchy.
+4.  **Resource Generator**: Compiles classified chunks into study materials.
+5.  **Planner Engine**: Constraint-based scheduler for timetable generation.
 
-### Subject & Topic Management
-```
-GET    /api/subjects              - List all subjects
-GET    /api/subjects/{id}/topics  - List topics for a subject
-GET    /api/topics/{id}/resources - Get all generated materials for a topic
-```
-
-### Document Upload & Processing
-```
-POST   /api/documents/upload      - Upload PDF/DOCX/PPT
-POST   /api/documents/{id}/process - Trigger AI analysis
-GET    /api/documents/{id}/chunks  - View classified text segments
-```
+### Database Schema (14 Interconnected Tables)
+- **Core**: `users`, `subjects`, `chapters`, `topics`
+- **Processing**: `documents`, `document_chunks`
+- **Resources**: `notes`, `cheatsheets`, `pyqs`, `flashcards`
+- **Planning**: `timetables`, `timetable_slots`, `user_progress`, `topic_dependencies`
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide React.
-- **Backend**: FastAPI (Python 3.12).
-- **ORM**: SQLAlchemy 2.0.
-- **Database**: SQLite (dev) / PostgreSQL (prod).
-- **Security**: JWT, Passlib (SHA256_Crypt).
-- **Document Processing**: pdfplumber, python-docx, python-pptx, pytesseract.
+### Backend (Python 3.12+)
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (High-performance async API)
+- **ORM**: [SQLAlchemy 2.0](https://www.sqlalchemy.org/) (Modern data modeling)
+- **Validation**: [Pydantic v2](https://docs.pydantic.dev/) (Strict type safety)
+- **Security**: [JWT](https://jwt.io/) (Secure authentication)
+- **Parsing**: `pdfplumber`, `python-docx`, `python-pptx`, `pytesseract`
+
+### Frontend (React 18)
+- **Framework**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) (Modern dark-themed Glassmorphism UI)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **API Client**: [Axios](https://axios-http.com/)
+
+### Infrastructure
+- **Database**: SQLite (Development) / PostgreSQL (Production ready)
+- **API Documentation**: Swagger UI (`/docs`) & ReDoc (`/redoc`)
 
 ---
 
 ## 📁 Project Structure
 
-```
+```bash
 studyPlanner/
-├── main.py                 # FastAPI application (serves API & Frontend)
-├── frontend/               # React + Vite TypeScript project
+├── main.py                 # FastAPI Application entry point
+├── src/                    # Backend Source Code
+│   ├── api/                # API Layer (Routers, Schemas, Dependencies)
+│   ├── classifier/         # Content classification logic & patterns
+│   ├── models/             # SQLAlchemy Data Models (14 tables)
+│   ├── parsers/            # Specialized Document Parsers (PDF/DOCX/PPT)
+│   ├── services/           # Business Logic (Generation, Processing, Planning)
+│   ├── database/           # Database initialization & seeding scripts
+│   └── utils/              # File storage & common utilities
+├── frontend/               # Modern React + TypeScript Frontend
 │   ├── src/
 │   │   ├── components/     # UI Components (Dashboard, SubjectView, etc.)
-│   │   ├── context/        # Global state (AppContext)
-│   │   ├── services/       # API client (Axios)
-│   │   └── types/          # TypeScript interfaces
-│   └── dist/               # Compiled production build
-├── src/                    # Backend source code
-│   ├── api/                # API layer (Routers, Schemas)
-│   ├── classifier/         # Rule-based content classification
-│   ├── models/             # SQLAlchemy ORM models
-│   ├── parsers/            # PDF/DOCX/PPT extraction logic
-│   └── services/           # Business logic (Generation, Processing)
-├── scripts/                # Database utility scripts
-└── study_planner.db        # SQLite database
+│   │   ├── context/        # Global State Management (AppContext)
+│   │   ├── services/       # API Integration Layer
+│   │   └── types/          # TypeScript Interfaces
+│   └── public/             # Static Assets
+├── scripts/                # Database management utility scripts
+└── uploads/                # Local storage for processed documents
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Python 3.10+**
+- **Node.js 18+**
+- **Tesseract OCR** (Optional, for image processing)
+
+### 1. Backend Setup
+```bash
+# Clone the repository
+git clone <repo-url>
+cd studyPlanner
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize and seed the database
+python scripts/init_db.py
+python scripts/seed_db.py
+```
+
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+### 3. Run the Application
+```bash
+# From the root directory
+uvicorn main:app --reload
+```
+- **API Base**: `http://localhost:8000`
+- **Frontend**: Served automatically at `http://localhost:8000`
+- **Swagger Docs**: `http://localhost:8000/docs`
+
+---
+
+## 🧪 Testing
+The project includes automated tests for the core processing pipeline and parsers.
+```bash
+# Test Document Processing
+python test_processing.py
+
+# Test Document Parsers (PDF/DOCX/PPT)
+python test_parsers.py
+
+# Test API Endpoints
+python test_api.py
 ```
 
 ---
 
 ## 🔮 Roadmap
-
-### Phase 3 (Upcoming)
-- [ ] **Spaced Repetition**: Implement Leitner system for flashcards.
-- [ ] **Interactive Timetable**: Drag-and-drop study scheduler.
-- [ ] **AI/NLP Enhancement**: spaCy integration for better topic extraction.
-- [ ] **Weak Topic Detection**: Analytics based on flashcard performance.
-- [ ] **Export Options**: Export notes to Markdown/PDF.
+- [ ] **Phase 3**: Advanced AI integration with spaCy/Transformers for semantic topic extraction.
+- [ ] **Spaced Repetition**: Implement Leitner system algorithms for flashcard scheduling.
+- [ ] **Adaptive Planner**: Real-time timetable rescheduling based on user performance.
+- [ ] **Vector Search**: Semantic document search using vector embeddings.
+- [ ] **Export Suite**: Export study resources to PDF, Markdown, and Notion.
 
 ---
 
-## 🧪 Testing
-
-### Run Processing Pipeline Test
-```bash
-python test_processing.py
-```
-*Tests registration, login, upload, processing, and resource retrieval.*
-
----
-
-## 🤝 Contributing
-
-This project demonstrates a full-stack AI-integrated application. Contributions are welcome!
-
----
-
-**Built with ❤️ for students who want to study smarter, not harder.**
+**Built with ❤️ for a smarter way to learn.**
