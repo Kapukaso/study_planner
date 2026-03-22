@@ -19,6 +19,15 @@ from src.api.schemas.chunk import (
     ProcessingResponse
 )
 
+from src.api.schemas.topic import TopicResponse, TopicListResponse
+from src.api.schemas.resource import (
+    NoteResponse,
+    FlashcardResponse,
+    PYQResponse,
+    CheatsheetResponse,
+    TopicResourcesResponse
+)
+
 __all__ = [
     "ErrorResponse",
     "MessageResponse",
@@ -35,4 +44,11 @@ __all__ = [
     "ChunkListResponse",
     "ChunkStatsResponse",
     "ProcessingResponse",
+    "TopicResponse",
+    "TopicListResponse",
+    "NoteResponse",
+    "FlashcardResponse",
+    "PYQResponse",
+    "CheatsheetResponse",
+    "TopicResourcesResponse",
 ]

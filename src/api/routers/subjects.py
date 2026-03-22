@@ -8,13 +8,33 @@ from src.api.schemas import (
     SubjectUpdate,
     SubjectResponse,
     SubjectListResponse,
+    TopicResponse,
+    TopicListResponse,
     MessageResponse
 )
 from src.api.dependencies import get_current_user_id, get_subject_or_404
 from src.services import subject_service
-from src.models import Subject
+from src.models import Subject, Topic, Chapter
 
 router = APIRouter()
+
+
+@router.get("/subjects/{subject_id}/topics", response_model=TopicListResponse)
+async def list_subject_topics(
+    subject: Subject = Depends(get_subject_or_404),
+    db: Session = Depends(get_db)
+):
+    """Get all topics for a subject."""
+    topics = db.query(Topic).join(
+        Chapter, Chapter.id == Topic.chapter_id
+    ).filter(
+        Chapter.subject_id == subject.id
+    ).all()
+    
+    return TopicListResponse(
+        topics=[TopicResponse.model_validate(t) for t in topics],
+        total=len(topics)
+    )
 
 
 @router.post("/subjects", response_model=SubjectResponse, status_code=status.HTTP_201_CREATED)

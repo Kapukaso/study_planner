@@ -62,12 +62,21 @@ async def root():
 
 
 # Import and include routers FIRST (before static files)
-from src.api.routers import subjects, documents, auth
+from src.api.routers import subjects, documents, auth, resources
 
 app.include_router(subjects.router, prefix="/api", tags=["Subjects"])
 app.include_router(documents.router, prefix="/api", tags=["Documents"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(resources.router, prefix="/api", tags=["Resources"])
 
 # Mount static files for frontend LAST (catch-all)
 from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+import os
+
+# Ensure the dist directory exists to avoid startup errors
+frontend_dist = os.path.join(os.getcwd(), "frontend", "dist")
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+else:
+    # Fallback for development if dist doesn't exist yet
+    print("Warning: frontend/dist not found. Run 'npm run build' in the frontend directory.")

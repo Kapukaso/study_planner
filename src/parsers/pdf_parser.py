@@ -2,8 +2,10 @@
 import pdfplumber
 from pathlib import Path
 from typing import List
+import os
 
 from src.parsers.base_parser import BaseParser, ParsedChunk
+from src.parsers.exceptions import CorruptedFileError, ParserError
 
 
 class PDFParser(BaseParser):
@@ -19,34 +21,47 @@ class PDFParser(BaseParser):
         Returns:
             List of ParsedChunk objects, one per page
         """
+        self.validate_file(file_path, ['.pdf'])
         chunks = []
         
         try:
             with pdfplumber.open(file_path) as pdf:
-                for page_num, page in enumerate(pdf.pages, start=1):
-                    # Extract text from page
-                    text = page.extract_text()
+                if not pdf.pages:
+                    return []
                     
-                    if text:
-                        # Clean text
-                        cleaned_text = self.clean_text(text)
+                for page_num, page in enumerate(pdf.pages, start=1):
+                    try:
+                        # Extract text from page
+                        text = page.extract_text()
                         
-                        if cleaned_text:
-                            # Create chunk with page metadata
-                            chunk = ParsedChunk(
-                                text=cleaned_text,
-                                page_number=page_num,
-                                chunk_index=page_num - 1,
-                                metadata={
-                                    'page_width': page.width,
-                                    'page_height': page.height,
-                                    'parser': 'pdfplumber'
-                                }
-                            )
-                            chunks.append(chunk)
+                        if text:
+                            # Clean text
+                            cleaned_text = self.clean_text(text)
+                            
+                            if cleaned_text:
+                                # Create chunk with page metadata
+                                chunk = ParsedChunk(
+                                    text=cleaned_text,
+                                    page_number=page_num,
+                                    chunk_index=page_num - 1,
+                                    metadata={
+                                        'page_width': page.width,
+                                        'page_height': page.height,
+                                        'parser': 'pdfplumber'
+                                    }
+                                )
+                                chunks.append(chunk)
+                    except Exception as page_err:
+                        # Log error for specific page but continue with others
+                        print(f"Warning: Failed to parse page {page_num} of {file_path}: {str(page_err)}")
+                        continue
         
+        except pdfplumber.pdfparser.PDFSyntaxError:
+            raise CorruptedFileError(f"PDF file is corrupted or invalid: {file_path}")
         except Exception as e:
-            raise ValueError(f"Error parsing PDF: {str(e)}")
+            if isinstance(e, ParserError):
+                raise e
+            raise ParserError(f"Unexpected error parsing PDF: {str(e)}")
         
         return chunks
     

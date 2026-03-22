@@ -61,7 +61,15 @@ async def upload_document(
     # Create document
     document = await document_service.create_document(db, file, subject_id)
     
-    return DocumentUploadResponse(**document.__dict__)
+    return DocumentUploadResponse(
+        id=document.id,
+        subject_id=document.subject_id,
+        filename=document.filename,
+        file_type=document.file_type,
+        file_size=document.file_size,
+        processing_status=document.processing_status,
+        uploaded_at=document.uploaded_at
+    )
 
 
 @router.get("/documents", response_model=DocumentListResponse)
@@ -156,7 +164,8 @@ async def process_document(
     # Process document
     processor = DocumentProcessor()
     try:
-        chunk_count = processor.process_document(db, document)
+        result = processor.process_document(db, document)
+        chunk_count = result["chunks"]
         
         return ProcessingResponse(
             document_id=document.id,

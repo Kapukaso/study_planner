@@ -1,0 +1,82 @@
+/* Custom animations and specific layout tweaks */
+
+.glass-morphism {
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+}
+
+.glass-morphism-card {
+  background: rgba(15, 15, 20, 0.4);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glow-card:hover {
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.08), 0 0 2px rgba(0, 245, 255, 0.2);
+  border-color: rgba(0, 245, 255, 0.3);
+}
+
+/* Noise overlay for high-end texture */
+.noise-overlay::after {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+}
+
+.animate-in {
+  animation: in 0.5s ease-out forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.slide-in-from-bottom-4 {
+  animation: slideInFromBottom4 0.5s ease-out forwards;
+}
+
+.slide-in-from-bottom-8 {
+  animation: slideInFromBottom8 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom4 {
+  from { transform: translateY(1rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInFromBottom8 {
+  from { transform: translateY(2rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}

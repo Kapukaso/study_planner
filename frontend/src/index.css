@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Bespoke Midnight Palette */
+    --background: 240 10% 2%;    /* Deepest Inky Black */
+    --foreground: 210 20% 98%;   /* Pure Off-white */
+
+    --card: 240 10% 4%;         /* Slightly lighter surface */
+    --card-foreground: 210 20% 98%;
+
+    --popover: 240 10% 4%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 185 100% 50%;     /* Electric Cyan */
+    --primary-foreground: 240 10% 2%;
+
+    --secondary: 270 100% 60%;   /* Neon Violet */
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 240 5% 15%;         /* Dark Charcoal */
+    --muted-foreground: 240 5% 65%; /* Soft Silver */
+
+    --accent: 185 100% 50%;
+    --accent-foreground: 240 10% 2%;
+
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 240 5% 12%;        /* Subtle dark border */
+    --input: 240 5% 12%;
+    --ring: 185 100% 50%;
+
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}

@@ -13,12 +13,28 @@ from src.auth.security import SECRET_KEY, ALGORITHM
 from src.services import user_service
 from src.api.schemas.token import TokenData
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """
-    Get current user from JWT token.
+    Get current user from JWT token. 
+    Bypasses to demo_user if no token provided (Development Mode).
     """
+    if not token:
+        # Development fallback: Auto-login demo user
+        user = user_service.get_user_by_username(db, username="demo_user")
+        if user:
+            return user
+        # If demo user doesn't exist, try to get the first user
+        user = db.query(User).first()
+        if user:
+            return user
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No users in database. Run seeding script.",
+        )
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -39,6 +55,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 
+def get_current_user_id(current_user: User = Depends(get_current_user)) -> str:
+    """Get current user's ID."""
+    return current_user.id
+
+
 def get_subject_or_404(
     subject_id: str,
     db: Session = Depends(get_db),
@@ -54,6 +75,21 @@ def get_subject_or_404(
         raise NotFoundException(f"Subject with ID {subject_id} not found")
     
     return subject
+
+
+from src.models.topic import Topic
+
+def get_topic_or_404(
+    topic_id: str,
+    db: Session = Depends(get_db)
+) -> Topic:
+    """Get topic by ID or raise 404."""
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    
+    if not topic:
+        raise NotFoundException(f"Topic with ID {topic_id} not found")
+    
+    return topic
 
 
 def get_document_or_404(

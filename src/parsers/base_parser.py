@@ -2,6 +2,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 import re
+import os
+from src.parsers.exceptions import FileNotReadableError, UnsupportedFormatError
 
 
 class ParsedChunk:
@@ -23,6 +25,20 @@ class ParsedChunk:
 class BaseParser(ABC):
     """Base class for document parsers."""
     
+    def validate_file(self, file_path: str, expected_extensions: List[str]):
+        """Validate if file exists and has correct extension."""
+        if not os.path.exists(file_path):
+            raise FileNotReadableError(f"File not found: {file_path}")
+        
+        if not os.access(file_path, os.R_OK):
+            raise FileNotReadableError(f"File is not readable: {file_path}")
+            
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext not in expected_extensions:
+            raise UnsupportedFormatError(
+                f"Unsupported file format: {ext}. Expected: {', '.join(expected_extensions)}"
+            )
+
     @abstractmethod
     def parse(self, file_path: str) -> List[ParsedChunk]:
         """

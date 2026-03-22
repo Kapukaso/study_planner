@@ -83,6 +83,40 @@ def test_document_processing():
     print("DOCUMENT PROCESSING - TEST")
     print("="*60)
     
+    # Step 0: Register and Login
+    print("\n[0] Registering and Logging in...")
+    import uuid
+    username = f"testuser_{str(uuid.uuid4())[:8]}"
+    email = f"{username}@example.com"
+    password = "testpassword123"
+    
+    # Register
+    reg_response = requests.post(
+        f"{BASE_URL}/api/auth/register",
+        json={
+            "username": username,
+            "email": email,
+            "password": password,
+            "full_name": "Test User"
+        }
+    )
+    print(f"Registration Response Status: {reg_response.status_code}")
+    print(f"Registration Response: {reg_response.text}")
+    
+    # Login
+    login_response = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        data={
+            "username": username,
+            "password": password
+        }
+    )
+    print(f"Login Response Status: {login_response.status_code}")
+    login_data = login_response.json()
+    print(f"Login Response: {json.dumps(login_data, indent=2)}")
+    token = login_data["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    
     # Step 1: Create test subject
     print("\n[1] Creating test subject...")
     subject_response = requests.post(
@@ -91,7 +125,8 @@ def test_document_processing():
             "name": "Operating Systems",
             "code": "CS301",
             "priority": 9
-        }
+        },
+        headers=headers
     )
     subject_data = print_response("Create Subject", subject_response)
     
@@ -117,7 +152,8 @@ def test_document_processing():
         upload_response = requests.post(
             f"{BASE_URL}/api/documents/upload",
             files={'file': (pdf_filename, f, 'application/pdf')},
-            data={'subject_id': subject_id}
+            data={'subject_id': subject_id},
+            headers=headers
         )
     
     upload_data = print_response("Upload Document", upload_response)
@@ -131,7 +167,8 @@ def test_document_processing():
     # Step 4: Process document
     print("\n[4] Processing document (parsing + classification)...")
     process_response = requests.post(
-        f"{BASE_URL}/api/documents/{document_id}/process"
+        f"{BASE_URL}/api/documents/{document_id}/process",
+        headers=headers
     )
     process_data = print_response("Process Document", process_response)
     
@@ -142,29 +179,52 @@ def test_document_processing():
     # Step 5: Get chunk statistics
     print("\n[5] Getting chunk statistics...")
     stats_response = requests.get(
-        f"{BASE_URL}/api/documents/{document_id}/chunks/stats"
+        f"{BASE_URL}/api/documents/{document_id}/chunks/stats",
+        headers=headers
     )
     stats_data = print_response("Chunk Statistics", stats_response)
     
     # Step 6: Get all chunks
     print("\n[6] Getting all chunks...")
     chunks_response = requests.get(
-        f"{BASE_URL}/api/documents/{document_id}/chunks"
+        f"{BASE_URL}/api/documents/{document_id}/chunks",
+        headers=headers
     )
     chunks_data = print_response("All Chunks", chunks_response)
     
     # Step 7: Filter by content type
     print("\n[7] Getting only formulas...")
     formula_response = requests.get(
-        f"{BASE_URL}/api/documents/{document_id}/chunks?content_type=formula"
+        f"{BASE_URL}/api/documents/{document_id}/chunks?content_type=formula",
+        headers=headers
     )
     formula_data = print_response("Formula Chunks", formula_response)
     
     print("\n[8] Getting only questions...")
     pyq_response = requests.get(
-        f"{BASE_URL}/api/documents/{document_id}/chunks?content_type=pyq"
+        f"{BASE_URL}/api/documents/{document_id}/chunks?content_type=pyq",
+        headers=headers
     )
     pyq_data = print_response("PYQ Chunks", pyq_response)
+    
+    # Step 9: Get Resources (NEW)
+    print("\n[9] Getting Generated Resources...")
+    
+    # Get all topics for subject
+    topics_response = requests.get(
+        f"{BASE_URL}/api/subjects/{subject_id}/topics",
+        headers=headers
+    )
+    topics_data = print_response("Subject Topics", topics_response)
+    
+    if topics_data and topics_data["topics"]:
+        topic_id = topics_data["topics"][0]["id"]
+        
+        resources_response = requests.get(
+            f"{BASE_URL}/api/topics/{topic_id}/resources",
+            headers=headers
+        )
+        print_response("Topic Resources", resources_response)
     
     # Summary
     print("\n" + "="*60)

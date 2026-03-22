@@ -18,19 +18,28 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
     """
-    db_user = user_service.get_user_by_email(db, email=user.email)
-    if db_user:
+    try:
+        db_user = user_service.get_user_by_email(db, email=user.email)
+        if db_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+        db_user = user_service.get_user_by_username(db, username=user.username)
+        if db_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already registered",
+            )
+        return user_service.create_user(db=db, user=user)
+    except Exception as e:
+        print(f"Registration Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
         )
-    db_user = user_service.get_user_by_username(db, username=user.username)
-    if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
-        )
-    return user_service.create_user(db=db, user=user)
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(

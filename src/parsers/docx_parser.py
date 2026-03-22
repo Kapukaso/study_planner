@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 import os
 
 from src.parsers.base_parser import BaseParser, ParsedChunk
+from src.parsers.exceptions import CorruptedFileError, ParserError
 
 
 class DOCXParser(BaseParser):
@@ -20,6 +21,7 @@ class DOCXParser(BaseParser):
         Returns:
             List of ParsedChunk objects
         """
+        self.validate_file(file_path, ['.docx', '.doc'])
         chunks = []
         
         try:
@@ -98,7 +100,11 @@ class DOCXParser(BaseParser):
                 chunks.append(chunk)
         
         except Exception as e:
-            raise ValueError(f"Error parsing DOCX: {str(e)}")
+            if "Package not found" in str(e) or "not a Word file" in str(e):
+                raise CorruptedFileError(f"DOCX file is corrupted or invalid: {file_path}")
+            if isinstance(e, ParserError):
+                raise e
+            raise ParserError(f"Error parsing DOCX: {str(e)}")
         
         return chunks
     
@@ -117,7 +123,7 @@ class DOCXParser(BaseParser):
             headings = []
             
             for para in doc.paragraphs:
-                if para.style.name.startswith('Heading'):
+                if para.style and para.style.name.startswith('Heading'):
                     headings.append(para.text.strip())
             
             return headings

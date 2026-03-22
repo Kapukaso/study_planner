@@ -2,30 +2,36 @@
 
 An AI-powered study planner that ingests subject-wise documents and automatically generates notes, cheatsheets, previous-year questions, and personalized timetables.
 
-## 🎯 Project Status: Phase 1 MVP Complete
+## 🎯 Project Status: Phase 2 Complete
 
 ### ✅ What's Working
 
+**Frontend (New!)**
+- ✅ **React + Vite + TypeScript** modern architecture.
+- ✅ **Glassmorphism UI** with Tailwind CSS (Indigo/Violet dark theme).
+- ✅ **Interactive Dashboard** with subject statistics.
+- ✅ **Resource Viewer**: Tabbed interface for Documents, Notes, Flashcards, and PYQs.
+- ✅ **Active Recall**: Interactive 3D flip-cards for flashcard study.
+- ✅ **Topic-based Navigation**: Sidebar for navigating auto-generated knowledge topics.
+
 **Database Infrastructure**
-- ✅ Complete SQLAlchemy ORM with 14 interconnected tables
-- ✅ SQLite for local development (PostgreSQL-ready)
-- ✅ Database initialization and seeding scripts
-- ✅ Sample data: Operating Systems subject with topics, notes, cheatsheets, PYQs
+- ✅ Complete SQLAlchemy ORM with 14 interconnected tables.
+- ✅ SQLite for local development (PostgreSQL-ready).
+- ✅ Database initialization and seeding scripts.
+- ✅ Sample data: Operating Systems subject with topics, notes, cheatsheets, PYQs.
 
 **REST API with FastAPI**
-- ✅ Subject Management (Full CRUD)
-- ✅ Document Upload (PDF, DOCX, PPT, Images)
-- ✅ File storage with validation (type, size limits)
-- ✅ Auto-generated API docs at `/docs`
-- ✅ Health monitoring endpoints
+- ✅ **Authentication**: Secure JWT-based auth with SHA256 hashing.
+- ✅ **Subject & Topic Management**: Full hierarchy navigation.
+- ✅ **Document Processing**: Pipeline for PDF/DOCX/PPT parsing and content classification.
+- ✅ **Resource API**: Endpoints for fetching auto-generated Notes, Flashcards, and PYQs.
+- ✅ **Auto-generated API docs** at `/docs`.
 
 **Core Features**
-- ✅ User management models
-- ✅ Subject/Chapter/Topic hierarchy
-- ✅ Document processing pipeline foundation
-- ✅ Resource generation models (Notes, Cheatsheets, PYQs, Flashcards)
-- ✅ Timetable planning models
-- ✅ Progress tracking system
+- ✅ PDF/DOCX text extraction engine.
+- ✅ Content classification (concepts, formulas, definitions, PYQs).
+- ✅ Knowledge structure extraction (auto-creating chapters and topics).
+- ✅ Resource generation models (Notes, Cheatsheets, PYQs, Flashcards).
 
 ---
 
@@ -33,9 +39,9 @@ An AI-powered study planner that ingests subject-wise documents and automaticall
 
 ### Prerequisites
 - Python 3.10+
-- pip
+- Node.js 18+ & npm
 
-### Installation
+### Backend Installation
 
 ```bash
 # Clone the repository
@@ -48,7 +54,7 @@ venv\Scripts\activate  # Windows
 # source venv/bin/activate  # Linux/Mac
 
 # Install dependencies
-pip install fastapi uvicorn pydantic pydantic-settings python-multipart sqlalchemy alembic python-dotenv
+pip install -r requirements.txt
 
 # Initialize database
 python scripts/init_db.py
@@ -57,111 +63,62 @@ python scripts/init_db.py
 python scripts/seed_db.py
 ```
 
-### Run the Server
+### Frontend Installation
 
 ```bash
-uvicorn main:app --reload
+cd frontend
+npm install
+npm run build  # For production
 ```
 
-Server runs on: **http://127.0.0.1:8000**
+### Run the System
 
-**API Documentation**: http://127.0.0.1:8000/docs
+1. **Production Mode**:
+   ```bash
+   # Run from root directory
+   uvicorn main:app --reload
+   ```
+   Access at: **http://127.0.0.1:8000** (FastAPI serves the React build)
+
+2. **Development Mode**:
+   - Backend: `uvicorn main:app --reload` (Port 8000)
+   - Frontend: `cd frontend && npm run dev` (Port 5173 - proxies API to 8000)
 
 ---
 
 ## 📚 API Endpoints
 
-### Health Check
+### Authentication
 ```
-GET /health - Server health status
-GET / - API information
-```
-
-### Subject Management
-```
-POST   /api/subjects          - Create subject
-GET    /api/subjects          - List all subjects
-GET    /api/subjects/{id}     - Get subject details
-PUT    /api/subjects/{id}     - Update subject
-DELETE /api/subjects/{id}     - Delete subject
+POST /api/auth/register - Register new user
+POST /api/auth/login    - Get access token
+GET  /api/auth/users/me - Get current user profile
 ```
 
-### Document Upload
+### Subject & Topic Management
 ```
-POST   /api/documents/upload  - Upload document
-GET    /api/documents         - List documents
-GET    /api/documents/{id}    - Get document details
-DELETE /api/documents/{id}    - Delete document
-```
-
----
-
-## 🗄️ Database Schema
-
-### Core Tables
-- **users** - User accounts and preferences
-- **subjects** - Courses/subjects being studied
-- **chapters** - Chapter organization
-- **topics** - Core knowledge units with difficulty scoring
-
-### Document Processing
-- **documents** - Uploaded file metadata
-- **document_chunks** - Parsed text segments with classification
-
-### Generated Resources
-- **notes** - Auto-generated study notes
-- **cheatsheets** - One-page summaries
-- **pyqs** - Previous year questions
-- **flashcards** - Active recall cards
-
-### Planning & Progress
-- **timetables** - Study schedules
-- **timetable_slots** - Individual study sessions
-- **user_progress** - Topic mastery tracking
-- **topic_dependencies** - Prerequisite relationships
-
----
-
-## 📖 Example Usage
-
-### 1. Create a Subject
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/subjects \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Data Structures",
-    "code": "CS201",
-    "exam_date": "2026-03-20",
-    "priority": 8,
-    "total_marks": 100
-  }'
+GET    /api/subjects              - List all subjects
+GET    /api/subjects/{id}/topics  - List topics for a subject
+GET    /api/topics/{id}/resources - Get all generated materials for a topic
 ```
 
-### 2. Upload a Document
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/documents/upload \
-  -F "file=@lecture_notes.pdf" \
-  -F "subject_id=<subject-id-from-step-1>"
+### Document Upload & Processing
 ```
-
-### 3. List Subjects
-
-```bash
-curl http://127.0.0.1:8000/api/subjects
+POST   /api/documents/upload      - Upload PDF/DOCX/PPT
+POST   /api/documents/{id}/process - Trigger AI analysis
+GET    /api/documents/{id}/chunks  - View classified text segments
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend Framework**: FastAPI
-- **ORM**: SQLAlchemy 2.0
-- **Database**: SQLite (dev) / PostgreSQL (prod)
-- **Validation**: Pydantic v2
-- **Server**: Uvicorn
-- **Document Processing**: pdfplumber, python-docx, python-pptx (ready to integrate)
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide React.
+- **Backend**: FastAPI (Python 3.12).
+- **ORM**: SQLAlchemy 2.0.
+- **Database**: SQLite (dev) / PostgreSQL (prod).
+- **Security**: JWT, Passlib (SHA256_Crypt).
+- **Document Processing**: pdfplumber, python-docx, python-pptx, pytesseract.
 
 ---
 
@@ -169,111 +126,50 @@ curl http://127.0.0.1:8000/api/subjects
 
 ```
 studyPlanner/
-├── main.py                 # FastAPI application
-├── src/
-│   ├── config.py          # Configuration management
-│   ├── api/               # API layer
-│   │   ├── routers/       # Endpoint routers
-│   │   ├── schemas/       # Pydantic models
-│   │   ├── dependencies.py
-│   │   └── exceptions.py
-│   ├── database/          # Database layer
-│   │   ├── base.py        # SQLAlchemy setup
-│   │   └── seed.py        # Sample data
-│   ├── models/            # ORM models (14 files)
-│   ├── services/          # Business logic
-│   │   ├── subject_service.py
-│   │   └── document_service.py
-│   └── utils/             # Utilities
-│       └── file_storage.py
-├── scripts/               # Database scripts
-│   ├── init_db.py        # Initialize database
-│   ├── seed_db.py        # Seed sample data
-│   └── reset_db.py       # Reset database
-├── .env                   # Environment config
-├── requirements.txt       # Dependencies
-└── study_planner.db      # SQLite database
+├── main.py                 # FastAPI application (serves API & Frontend)
+├── frontend/               # React + Vite TypeScript project
+│   ├── src/
+│   │   ├── components/     # UI Components (Dashboard, SubjectView, etc.)
+│   │   ├── context/        # Global state (AppContext)
+│   │   ├── services/       # API client (Axios)
+│   │   └── types/          # TypeScript interfaces
+│   └── dist/               # Compiled production build
+├── src/                    # Backend source code
+│   ├── api/                # API layer (Routers, Schemas)
+│   ├── classifier/         # Rule-based content classification
+│   ├── models/             # SQLAlchemy ORM models
+│   ├── parsers/            # PDF/DOCX/PPT extraction logic
+│   └── services/           # Business logic (Generation, Processing)
+├── scripts/                # Database utility scripts
+└── study_planner.db        # SQLite database
 ```
-
----
-
-## 🎓 Sample Data
-
-The seed script creates:
-- **User**: demo@studyplanner.com
-- **Subject**: Operating Systems (60-day exam timeline)
-- **Chapter**: Process Management
-- **Topics**: 
-  - Process Concepts (Easy, 2.0 hrs)
-  - Process Synchronization (Medium, 4.0 hrs)
-  - Deadlock (Hard, 5.0 hrs) ← depends on Process Synchronization
-- **Resources**:
-  - 1 Note with Markdown content
-  - 1 Cheatsheet with formulas
-  - 2 PYQs from 2023 exams
-  - 2 Flashcards
-- **Timetable**: 60-day plan with 2 study slots
 
 ---
 
 ## 🔮 Roadmap
 
-### Phase 2 (In Progress)
-- [ ] PDF text extraction engine
-- [ ] DOCX/PPT parsing
-- [ ] Content classification (concept, formula, definition, PYQ)
-- [ ] Knowledge graph construction
-- [ ] Auto-generate notes from documents
-- [ ] Auto-generate cheatsheets
-- [ ] PYQ extraction and categorization
-
-### Phase 3 (Planned)
-- [ ] AI/NLP integration (spaCy, transformers)
-- [ ] Semantic search
-- [ ] Adaptive timetable rescheduling
-- [ ] Weak topic detection
-- [ ] Spaced repetition algorithm
-- [ ] Frontend (React/Next.js)
-- [ ] User authentication
+### Phase 3 (Upcoming)
+- [ ] **Spaced Repetition**: Implement Leitner system for flashcards.
+- [ ] **Interactive Timetable**: Drag-and-drop study scheduler.
+- [ ] **AI/NLP Enhancement**: spaCy integration for better topic extraction.
+- [ ] **Weak Topic Detection**: Analytics based on flashcard performance.
+- [ ] **Export Options**: Export notes to Markdown/PDF.
 
 ---
 
 ## 🧪 Testing
 
-### Run API Tests
+### Run Processing Pipeline Test
 ```bash
-python test_api.py
+python test_processing.py
 ```
-
-### Reset Database
-```bash
-python scripts/reset_db.py
-```
-
-### Interactive Testing
-Open http://127.0.0.1:8000/docs for Swagger UI with interactive API testing.
-
----
-
-## 📄 License
-
-MIT License - Feel free to use for your studies!
+*Tests registration, login, upload, processing, and resource retrieval.*
 
 ---
 
 ## 🤝 Contributing
 
-Contributions welcome! This is an educational project to demonstrate:
-- FastAPI best practices
-- SQLAlchemy ORM patterns
-- Document processing pipelines
-- AI-powered education tools
-
----
-
-## 📧 Contact
-
-For questions or suggestions, please open an issue on GitHub.
+This project demonstrates a full-stack AI-integrated application. Contributions are welcome!
 
 ---
 

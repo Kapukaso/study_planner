@@ -5,7 +5,13 @@ const API_BASE = 'http://127.0.0.1:8000';
 const state = {
     subjects: [],
     currentSubject: null,
-    currentDocument: null,
+    currentTopic: null,
+    topics: [],
+    resources: {
+        notes: [],
+        flashcards: [],
+        pyqs: []
+    },
     chunks: [],
     filteredChunks: []
 };
@@ -135,9 +141,10 @@ async function processDocument(documentId) {
         const result = await response.json();
         showToast(`${result.message}`, 'success');
         
-        // Fetch documents for current subject
+        // Fetch documents and topics for current subject
         if (state.currentSubject) {
             fetchDocuments(state.currentSubject.id);
+            fetchTopics(state.currentSubject.id);
         }
     } catch (error) {
         showToast('Processing failed', 'error');
@@ -156,6 +163,51 @@ async function fetchDocuments(subjectId) {
     } catch (error) {
         showToast('Failed to load documents', 'error');
         console.error(error);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function fetchTopics(subjectId) {
+    try {
+        const response = await fetch(`${API_BASE}/api/subjects/${subjectId}/topics`);
+        const data = await response.json();
+        state.topics = data.topics || [];
+        renderTopics();
+        
+        // Auto-select first topic if available
+        if (state.topics.length > 0) {
+            selectTopic(state.topics[0].id);
+        }
+    } catch (error) {
+        console.error('Failed to fetch topics:', error);
+    }
+}
+
+async function selectTopic(topicId) {
+    state.currentTopic = state.topics.find(t => t.id === topicId);
+    
+    // Update UI
+    document.querySelectorAll('.topic-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.id === topicId);
+    });
+    
+    // Fetch resources for this topic
+    fetchTopicResources(topicId);
+}
+
+async function fetchTopicResources(topicId) {
+    try {
+        showLoading('Loading resources...');
+        const response = await fetch(`${API_BASE}/api/topics/${topicId}/resources`);
+        const data = await response.json();
+        state.resources = data;
+        
+        renderNotes();
+        renderFlashcards();
+        renderPYQs();
+    } catch (error) {
+        showToast('Failed to load resources', 'error');
     } finally {
         hideLoading();
     }
@@ -237,6 +289,21 @@ function renderSubjects() {
     `).join('');
 }
 
+function renderTopics() {
+    const list = document.getElementById('topicsList');
+    if (state.topics.length === 0) {
+        list.innerHTML = '<p class="empty-msg">No topics found. Upload a document to generate content.</p>';
+        return;
+    }
+    
+    list.innerHTML = state.topics.map(topic => `
+        <div class="topic-item" data-id="${topic.id}" onclick="selectTopic('${topic.id}')">
+            <span>${topic.title}</span>
+            <span class="topic-difficulty ${topic.difficulty}">${topic.difficulty}</span>
+        </div>
+    `).join('');
+}
+
 function renderDocuments(documents) {
     const list = document.getElementById('documentsList');
     
@@ -264,6 +331,55 @@ function renderDocuments(documents) {
                     ''
                 }
             </div>
+        </div>
+    `).join('');
+}
+
+function renderNotes() {
+    const container = document.getElementById('notesContainer');
+    if (!state.resources.notes || state.resources.notes.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No notes available for this topic</p>';
+        return;
+    }
+    
+    container.innerHTML = state.resources.notes.map(note => `
+        <div class="note-card">
+            <div class="note-content">${note.content}</div>
+        </div>
+    `).join('');
+}
+
+function renderFlashcards() {
+    const container = document.getElementById('flashcardsContainer');
+    if (!state.resources.flashcards || state.resources.flashcards.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No flashcards available</p>';
+        return;
+    }
+    
+    container.innerHTML = state.resources.flashcards.map(card => `
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="card-face card-front">${card.question}</div>
+            <div class="card-face card-back">${card.answer}</div>
+        </div>
+    `).join('');
+}
+
+function renderPYQs() {
+    const container = document.getElementById('pyqsContainer');
+    if (!state.resources.pyqs || state.resources.pyqs.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No PYQs found</p>';
+        return;
+    }
+    
+    container.innerHTML = state.resources.pyqs.map(pyq => `
+        <div class="pyq-item">
+            <div class="pyq-header">
+                <span class="pyq-tag">${pyq.year || 'Unknown Year'}</span>
+                <span class="pyq-tag">${pyq.marks ? pyq.marks + ' Marks' : ''}</span>
+                <span class="pyq-tag">${pyq.difficulty}</span>
+            </div>
+            <div class="pyq-text">${pyq.question_text}</div>
+            ${pyq.answer_text ? `<div class="pyq-answer" style="margin-top: 1rem; color: var(--accent-success);">Solution: ${pyq.answer_text}</div>` : ''}
         </div>
     `).join('');
 }
@@ -317,14 +433,11 @@ function viewSubject(subjectId) {
     if (!subject) return;
     
     state.currentSubject = subject;
-    
-    document.getElementById('subjectDetails').innerHTML = `
-        <h3>${subject.name}</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 1rem;">${subject.code || 'No code'}</p>
-    `;
+    document.getElementById('subjectTitle').textContent = subject.name;
     
     switchView('documentsView');
     fetchDocuments(subjectId);
+    fetchTopics(subjectId);
 }
 
 function viewChunks(documentId) {
@@ -343,6 +456,17 @@ document.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', () => {
             const view = item.dataset.view + 'View';
             switchView(view);
+        });
+    });
+
+    // Tab Navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
         });
     });
     
@@ -424,3 +548,4 @@ window.closeModal = closeModal;
 window.viewSubject = viewSubject;
 window.viewChunks = viewChunks;
 window.processDocument = processDocument;
+window.selectTopic = selectTopic;
