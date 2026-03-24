@@ -153,12 +153,13 @@ def is_concept(text: str) -> tuple[bool, float]:
     
     keyword_count = count_keyword_matches(text, CONTENT_KEYWORDS['concept'])
     if keyword_count > 0:
-        confidence += min(0.5, keyword_count * 0.2)
+        confidence += min(0.6, keyword_count * 0.25)
     
-    if len(text) > 200 and keyword_count > 0:
-        confidence += 0.2
+    # Concepts are usually longer and descriptive
+    if len(text) > 300:
+        confidence += 0.3
+    elif len(text) > 100:
+        confidence += 0.15
     
-    if len(text) > 100:
-        confidence += 0.1
-    
-    return confidence > 0.3, min(confidence, 1.0)
+    # If it doesn't match other specific types, it's more likely a concept
+    return confidence > 0.25, min(confidence, 1.0)

@@ -4,6 +4,7 @@ from typing import List, Optional
 import logging
 import uuid
 import re
+import spacy
 
 from src.models import (
     Document, DocumentChunk, Topic, Chapter, Subject,
@@ -18,6 +19,13 @@ class ResourceGenerator:
 
     def __init__(self, db: Session):
         self.db = db
+        # Load spaCy for advanced text extraction
+        try:
+            self.nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            import subprocess
+            subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+            self.nlp = spacy.load("en_core_web_sm")
 
     def generate_resources_for_document(self, document_id: str) -> dict:
         """
@@ -93,27 +101,66 @@ class ResourceGenerator:
         return topic
 
     def _generate_notes(self, topic: Topic, chunks: List[DocumentChunk]) -> int:
-        """Generate a single comprehensive note from all chunks."""
-        # Check if note already exists for this topic
+        """Generate structured markdown notes grouped by content type."""
         existing_note = self.db.query(Note).filter(Note.topic_id == topic.id).first()
         if existing_note:
             return 0
 
-        # Combine all text into a single markdown note
-        full_content = []
-        extracted_examples = []
+        # Organize chunks by their semantic classification
+        categorized_content = {
+            'concept': [],
+            'definition': [],
+            'formula': [],
+            'example': [],
+            'highlight': [],
+            'summary': []
+        }
 
+        extracted_examples = []
+        
         for chunk in chunks:
-            full_content.append(chunk.raw_text)
-            if chunk.content_type == 'example':
+            c_type = chunk.content_type
+            if c_type in categorized_content:
+                categorized_content[c_type].append(chunk.raw_text)
+            
+            if c_type == 'example':
                 extracted_examples.append(chunk.raw_text)
+
+        # Build a beautiful Markdown Note
+        markdown_sections = []
+        
+        if categorized_content['summary'] or categorized_content['highlight']:
+            markdown_sections.append("## 📌 Key Takeaways")
+            markdown_sections.extend([f"- {text}" for text in categorized_content['highlight']])
+            markdown_sections.extend([f"> {text}" for text in categorized_content['summary']])
+            
+        if categorized_content['concept']:
+            markdown_sections.append("## 🧠 Core Concepts")
+            markdown_sections.extend([f"{text}\n" for text in categorized_content['concept']])
+            
+        if categorized_content['definition']:
+            markdown_sections.append("## 📖 Definitions")
+            for text in categorized_content['definition']:
+                # Bold the term if it follows a "Term: definition" pattern
+                formatted = re.sub(r'^([^:]+):', r'**\1**:', text)
+                markdown_sections.append(f"- {formatted}")
+                
+        if categorized_content['formula']:
+            markdown_sections.append("## 🧮 Formulas")
+            markdown_sections.extend([f"`{text}`" for text in categorized_content['formula']])
+
+        full_content = "\n\n".join(markdown_sections)
+        
+        # Fallback if categories were empty
+        if not full_content.strip():
+            full_content = "\n\n".join([c.raw_text for c in chunks])
 
         note = Note(
             topic_id=topic.id,
-            content="\n\n".join(full_content),
-            summary=full_content[0][:200] + "..." if full_content else "",
+            content=full_content,
+            summary=categorized_content['summary'][0][:200] + "..." if categorized_content['summary'] else "Auto-generated structured notes.",
             examples=extracted_examples,
-            generation_method="extraction"
+            generation_method="ml_extraction"
         )
         
         self.db.add(note)
@@ -121,37 +168,50 @@ class ResourceGenerator:
         return 1
 
     def _generate_flashcards(self, topic: Topic, chunks: List[DocumentChunk]) -> int:
-        """Generate flashcards from definitions and formulas."""
+        """Generate smart flashcards using NLP (spaCy) for definitions and formulas."""
         count = 0
         for chunk in chunks:
-            if chunk.content_type in ['definition', 'formula']:
-                # Simple extraction: try to split by "is", "means", or "="
+            if chunk.content_type in ['definition', 'formula', 'concept']:
                 text = chunk.raw_text
                 question = ""
                 answer = ""
 
                 if chunk.content_type == 'definition':
-                    # Look for patterns like "Term: definition" or "Term is ..."
+                    # 1. Try Regex first
                     match = re.search(r'^([^:]+):', text)
                     if match:
                         question = match.group(1).strip()
                         answer = text[match.end():].strip()
                     else:
-                        # Try "is defined as" or "is"
-                        parts = re.split(r'\s+(is defined as|is|means|refers to)\s+', text, maxsplit=1, flags=re.IGNORECASE)
-                        if len(parts) >= 3:
-                            question = parts[0].strip()
-                            answer = parts[2].strip()
+                        # 2. Use spaCy to find the Subject and Object
+                        doc = self.nlp(text)
+                        for token in doc:
+                            if token.lemma_ in ["be", "mean", "define", "refer"]:
+                                lefts = list(token.lefts)
+                                rights = list(token.rights)
+                                if lefts and rights:
+                                    subject = " ".join([w.text for w in lefts[0].subtree])
+                                    question = f"What is meant by {subject}?"
+                                    answer = text
+                                    break
 
                 elif chunk.content_type == 'formula':
-                    # Look for "="
                     if '=' in text:
                         parts = text.split('=', 1)
-                        question = f"Formula for {parts[0].strip()}?"
+                        question = f"What is the formula for: {parts[0].strip()}?"
                         answer = text.strip()
+                        
+                elif chunk.content_type == 'concept':
+                    # Extract Key Entities using spaCy for fill-in-the-blank cards
+                    doc = self.nlp(text)
+                    if doc.ents:
+                        # Pick the most prominent entity
+                        entity = doc.ents[0]
+                        if len(entity.text) > 3:
+                            question = text.replace(entity.text, "______", 1)
+                            answer = entity.text
 
-                if question and answer:
-                    # Check if already exists
+                if question and answer and len(question) > 5 and len(answer) > 2:
                     exists = self.db.query(Flashcard).filter(
                         Flashcard.topic_id == topic.id,
                         Flashcard.question == question
@@ -236,3 +296,4 @@ class ResourceGenerator:
         self.db.add(cheatsheet)
         self.db.commit()
         return 1
+

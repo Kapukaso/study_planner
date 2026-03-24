@@ -61,3 +61,8 @@ htmlcov/
 
 # Alembic
 alembic/versions/*.pyc
+
+# ML Data & Models
+data/
+models/
+training_venv/

@@ -16,18 +16,19 @@ CONTENT_KEYWORDS = {
     
     'formula': [
         'formula', 'equation', 'calculate', 'computation', 'mathematical',
-        'expression', 'theorem', 'proof', 'derive', 'given by', 'where'
+        'expression', 'theorem', 'proof', 'derive', 'given by', 'where',
+        'determine', 'find', 'evaluate'
     ],
     
     'example': [
         'example', 'for instance', 'e.g.', 'such as', 'for example',
-        'instance', 'illustrated', 'demonstration', 'case study', 'consider'
+        'instance', 'illustrated', 'demonstration', 'case study', 'consider',
+        'suppose', 'let us assume'
     ],
     
     'pyq': [
         'question', 'q.', 'q)', 'marks', 'exam', 'test', 'answer',
-        'solve', 'explain', 'discuss', 'what', 'why', 'how', 'calculate',
-        'find', 'determine', 'compare', 'contrast'
+        'solve', 'explain', 'discuss', 'what', 'why', 'how', 'compare', 'contrast'
     ],
     
     'highlight': [
@@ -57,7 +58,7 @@ PATTERNS = {
     # Question patterns
     'question_mark': r'\?$',
     'question_start': r'^(Q\.|Q\d+|Question\s+\d+)',
-    'question_keywords': r'\b(what|why|how|when|where|who|which|explain|discuss|describe|define|calculate|find|determine)\b',
+    'question_keywords': r'^(what|why|how|when|where|who|which|explain|discuss|describe|define)\b',
     
     # Marks indication: (5 marks), [10M], etc.
     'marks': r'\((\d+)\s*(marks|M|m)\)|\[(\d+)M\]',
@@ -66,7 +67,7 @@ PATTERNS = {
     'year': r'\b(20[1-2]\d)\b|(\w+\s+20[1-2]\d)',
     
     # Example markers
-    'example_marker': r'^(Example|Ex\.|E\.g\.|Instance)\s*\d*:?',
+    'example_marker': r'^(Example|Ex\.|E\.g\.|Instance|Consider|Suppose)\s*\d*:?',
     
     # Highlight markers: bullet points, asterisks
     'bullet': r'^\s*[•●○■□▪▫-]\s+',

@@ -4,6 +4,10 @@ import { useAppContext } from '../../context/AppContext';
 import api from '../../services/api';
 import type { Topic, TopicResources } from '../../types';
 import { cn } from '../../lib/utils';
+import Button from '../common/Button';
+import Card from '../common/Card';
+import Badge from '../common/Badge';
+import EmptyState from '../common/EmptyState';
 
 const SubjectView: React.FC = () => {
   const { currentSubject, setCurrentSubject } = useAppContext();
@@ -69,7 +73,7 @@ const SubjectView: React.FC = () => {
 
       <div className="grid grid-cols-[300px_1fr] gap-8 flex-1 overflow-hidden">
         {/* Topics Sidebar */}
-        <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 flex flex-col overflow-hidden">
+        <Card variant="glass" className="flex flex-col overflow-hidden p-6" isHoverable={false}>
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
             Topics
@@ -91,21 +95,22 @@ const SubjectView: React.FC = () => {
                 >
                   <span className="relative z-10 font-semibold text-sm line-clamp-2">{topic.title}</span>
                   {topic.difficulty && (
-                    <span className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded-full mt-2 inline-block uppercase tracking-tighter relative z-10",
-                      selectedTopicId === topic.id ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
-                    )}>
+                    <Badge 
+                      variant={selectedTopicId === topic.id ? "primary" : "cyan"}
+                      size="xs"
+                      className="mt-2"
+                    >
                       {topic.difficulty}
-                    </span>
+                    </Badge>
                   )}
                 </button>
               ))
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Content Area */}
-        <div className="flex flex-col overflow-hidden bg-slate-900/40 border border-white/5 rounded-3xl">
+        <Card variant="glass" className="flex flex-col overflow-hidden p-0" isHoverable={false}>
           {/* Tabs */}
           <div className="flex p-2 gap-2 border-b border-white/5 bg-slate-950/20">
             {[
@@ -141,7 +146,6 @@ const SubjectView: React.FC = () => {
               <div className="animate-in fade-in duration-300">
                 {activeTab === 'docs' && (
                   <div className="space-y-4">
-                    {/* Placeholder for Document Upload & List */}
                     <div className="border-2 border-dashed border-white/10 rounded-3xl p-12 text-center hover:border-indigo-500/50 transition-colors group cursor-pointer">
                       <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <FileText className="w-8 h-8 text-indigo-400" />
@@ -156,9 +160,9 @@ const SubjectView: React.FC = () => {
                   <div className="space-y-6">
                     {resources?.notes.map(note => (
                       <div key={note.id} className="prose prose-invert max-w-none prose-indigo">
-                        <div className="bg-slate-800/30 p-8 rounded-3xl border border-white/5 leading-relaxed text-slate-200 whitespace-pre-wrap">
+                        <Card variant="outline" className="p-8 leading-relaxed text-slate-200 whitespace-pre-wrap">
                           {note.content}
-                        </div>
+                        </Card>
                       </div>
                     ))}
                     {(!resources?.notes || resources.notes.length === 0) && (
@@ -181,17 +185,17 @@ const SubjectView: React.FC = () => {
                 {activeTab === 'pyqs' && (
                   <div className="space-y-4">
                     {resources?.pyqs.map(pyq => (
-                      <div key={pyq.id} className="bg-slate-800/30 p-6 rounded-3xl border border-white/5 hover:border-pink-500/30 transition-colors">
+                      <Card key={pyq.id} variant="outline" className="hover:border-pink-500/30 transition-colors">
                         <div className="flex justify-between items-start mb-4">
-                          <span className="bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-pink-500/20">
+                          <Badge variant="pink" size="xs">
                             PYQ {pyq.year}
-                          </span>
+                          </Badge>
                           {pyq.marks && (
                             <span className="text-slate-500 text-xs font-bold">{pyq.marks} Marks</span>
                           )}
                         </div>
                         <p className="text-slate-200 font-medium leading-relaxed">{pyq.question_text}</p>
-                      </div>
+                      </Card>
                     ))}
                     {(!resources?.pyqs || resources.pyqs.length === 0) && (
                       <EmptyState message="No previous year questions found for this topic." />
@@ -201,7 +205,7 @@ const SubjectView: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -220,13 +224,13 @@ const Flashcard: React.FC<{ card: any }> = ({ card }) => {
         isFlipped ? "rotate-y-180" : ""
       )}>
         {/* Front */}
-        <div className="absolute inset-0 backface-hidden glass-morphism-card border-white/10 rounded-[32px] p-10 flex flex-col items-center justify-center text-center group-hover:border-indigo-500/30 transition-colors shadow-2xl">
+        <Card className="absolute inset-0 backface-hidden rounded-[32px] p-10 flex flex-col items-center justify-center text-center shadow-2xl" isHoverable={true}>
           <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4">Question</span>
           <p className="text-xl font-bold text-white leading-relaxed line-clamp-4">{card.question}</p>
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">Tap to flip</span>
+            <Badge variant="primary" size="xs">Tap to flip</Badge>
           </div>
-        </div>
+        </Card>
         {/* Back */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[32px] p-10 flex flex-col items-center justify-center text-center shadow-2xl shadow-indigo-500/40">
           <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Answer</span>
@@ -236,14 +240,5 @@ const Flashcard: React.FC<{ card: any }> = ({ card }) => {
     </div>
   );
 };
-
-const EmptyState: React.FC<{ message: string }> = ({ message }) => (
-  <div className="flex flex-col items-center justify-center py-20 text-slate-600">
-    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
-      <Brain className="w-10 h-10 opacity-20" />
-    </div>
-    <p className="font-medium">{message}</p>
-  </div>
-);
 
 export default SubjectView;
