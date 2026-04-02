@@ -1,8 +1,10 @@
 """API router for authentication."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.api.dependencies import get_db, get_current_user
 from src.api.schemas.user import UserCreate, User as UserSchema
@@ -10,11 +12,15 @@ from src.api.schemas.token import Token
 from src.auth.security import create_access_token, verify_password
 from src.models.user import User
 from src.services import user_service
+from src.config import get_settings
 
+settings = get_settings()
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
 
 @router.post("/register", response_model=UserSchema)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit(f"{settings.rate_limit_per_minute}/minute")
+def register_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
     """
@@ -32,17 +38,19 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
                 detail="Username already registered",
             )
         return user_service.create_user(db=db, user=user)
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Registration Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}"
+            detail="Registration failed due to an internal error"
         )
 
 @router.post("/login", response_model=Token)
+@limiter.limit("10/minute")
 def login_for_access_token(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
     """

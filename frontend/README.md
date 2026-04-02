@@ -1,73 +1,55 @@
-# React + TypeScript + Vite
+# LearnFlow Neural Studio (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The advanced React frontend for the Study Planner system, designed with a high-performance "Neural Studio" aesthetic.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Neural Architecture:** Built with React 19, TypeScript, and Vite.
+- **Precision Routing:** Integrated `react-router-dom` for seamless client-side navigation.
+- **Secure Sync:** Full JWT authentication flow with protected routes and persistent sessions.
+- **Advanced Aesthetics:** Custom glass-morphism, glowing UI elements, and high-contrast dark mode.
+- **Dynamic Deep Linking:** URL-synchronized subject views for bookmarkable knowledge nodes.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework:** React 19
+- **Styling:** Tailwind CSS + custom glass-morphism
+- **Icons:** Lucide React
+- **Routing:** React Router 7
+- **HTTP Client:** Axios
+- **Testing:** Vitest + React Testing Library
 
-## Expanding the ESLint configuration
+## 🚦 Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+### Production Build
+
+```bash
+npm run build
+```
+
+### Testing
+
+```bash
+npm run test
+```
+
+## 📂 Architecture
+
+- `/src/components/auth`: Login, Register, and Route Guards.
+- `/src/components/layout`: Sidebar and Topbar (Neural Core layout).
+- `/src/components/dashboard`: Main subjects overview.
+- `/src/components/subject`: Deep-dive subject analysis and resource viewing.
+- `/src/context`: Global state management (Auth and App contexts).
+- `/src/services`: API communication layer.

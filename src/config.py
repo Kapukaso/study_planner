@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     debug: bool = True
     secret_key: str = "dev-secret-key-change-in-production"
     
+    # CORS
+    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    
+    # Security
+    rate_limit_per_minute: int = 60
+    
     # File Storage
     upload_dir: Path = Path("./uploads")
     max_upload_size_mb: int = 50

@@ -1,73 +1,74 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, FileText, BarChart3, PlusCircle, BookOpen } from 'lucide-react';
-import { useAppContext } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
 
 interface NavItemProps {
   icon: React.ReactNode;
   label: string;
-  active?: boolean;
-  onClick: () => void;
+  to: string;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={cn(
-      "w-full flex items-center gap-3.5 px-6 py-4 rounded-2xl transition-all duration-500 font-bold group relative overflow-hidden",
-      active 
+const NavItem: React.FC<NavItemProps> = ({ icon, label, to }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) => cn(
+      "w-full flex items-center gap-3.5 px-6 py-4 rounded-2xl transition-all duration-500 font-bold group relative overflow-hidden text-left",
+      isActive 
         ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_20px_rgba(0,245,255,0.1)]" 
         : "text-slate-500 hover:bg-white/[0.03] hover:text-slate-200"
     )}
   >
-    {active && (
-      <span className="absolute left-0 w-1.5 h-6 bg-cyan-400 rounded-r-full shadow-[0_0_12px_rgba(0,245,255,0.6)]" />
+    {({ isActive }) => (
+      <>
+        {isActive && (
+          <span className="absolute left-0 w-1.5 h-6 bg-cyan-400 rounded-r-full shadow-[0_0_12px_rgba(0,245,255,0.6)]" />
+        )}
+        <span className={cn(
+          "w-5 h-5 transition-transform duration-500 group-hover:scale-110",
+          isActive ? "text-cyan-400" : "text-slate-600 group-hover:text-slate-300"
+        )}>{icon}</span>
+        <span className="text-xs tracking-[0.15em] uppercase font-black">{label}</span>
+      </>
     )}
-    <span className={cn(
-      "w-5 h-5 transition-transform duration-500 group-hover:scale-110",
-      active ? "text-cyan-400" : "text-slate-600 group-hover:text-slate-300"
-    )}>{icon}</span>
-    <span className="text-xs tracking-[0.15em] uppercase font-black">{label}</span>
-  </button>
+  </NavLink>
 );
 
 const Sidebar: React.FC = () => {
-  const { currentSubject, setCurrentSubject } = useAppContext();
-
   return (
     <aside className="w-80 glass-morphism border-r border-white/5 flex flex-col p-8 relative z-50">
       <div className="mb-14 px-2 flex items-center gap-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-[0_8px_24px_rgba(0,245,255,0.3)] group cursor-pointer overflow-hidden relative">
-          <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors" />
-          <BookOpen className="w-6 h-6 text-white relative z-10" />
-        </div>
-        <div>
-          <h1 className="text-xl font-black text-white tracking-[-0.05em] leading-none">
-            LEARNFLOW
-          </h1>
-          <p className="text-[10px] text-cyan-400/80 font-black uppercase tracking-[0.3em] mt-1.5">
-            NEURAL STUDIO
-          </p>
-        </div>
+        <NavLink to="/" className="flex items-center gap-4 group">
+          <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-[0_8px_24px_rgba(0,245,255,0.3)] overflow-hidden relative transition-transform group-hover:scale-105">
+            <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors" />
+            <BookOpen className="w-6 h-6 text-white relative z-10" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-white tracking-[-0.05em] leading-none">
+              LEARNFLOW
+            </h1>
+            <p className="text-[10px] text-cyan-400/80 font-black uppercase tracking-[0.3em] mt-1.5">
+              NEURAL STUDIO
+            </p>
+          </div>
+        </NavLink>
       </div>
 
       <nav className="flex-1 space-y-4">
         <NavItem 
           icon={<LayoutDashboard className="w-5 h-5" />} 
           label="Neural Core" 
-          active={!currentSubject}
-          onClick={() => setCurrentSubject(null)}
+          to="/"
         />
         <NavItem 
           icon={<FileText className="w-5 h-5" />} 
           label="Knowledge base" 
-          active={!!currentSubject}
-          onClick={() => {/* Navigate to docs */}}
+          to="/knowledge"
         />
         <NavItem 
           icon={<BarChart3 className="w-5 h-5" />} 
           label="Deep Analytics" 
-          onClick={() => {/* Navigate to analytics */}}
+          to="/analytics"
         />
       </nav>
 
@@ -79,7 +80,7 @@ const Sidebar: React.FC = () => {
         </div>
 
         <button 
-          className="w-full bg-cyan-500 hover:bg-cyan-400 text-black p-5 rounded-2xl flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] shadow-[0_12px_40px_rgba(0,245,255,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+          className="w-full bg-cyan-500 hover:bg-cyan-400 text-black p-5 rounded-2xl flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] shadow-[0_12px_40px_rgba(0,245,255,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
           onClick={() => {/* Open new subject modal */}}
         >
           <PlusCircle className="w-5 h-5" />

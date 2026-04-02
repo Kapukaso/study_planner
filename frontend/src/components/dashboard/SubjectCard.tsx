@@ -1,18 +1,18 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, FileText, CheckCircle2 } from 'lucide-react';
 import type { Subject } from '../../types';
-import { useAppContext } from '../../context/AppContext';
 
 interface SubjectCardProps {
   subject: Subject;
 }
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject }) => {
-  const { setCurrentSubject } = useAppContext();
+  const navigate = useNavigate();
 
   return (
     <div 
-      onClick={() => setCurrentSubject(subject)}
+      onClick={() => navigate(`/subject/${subject.id}`)}
       className="group glass-morphism-card rounded-[32px] p-8 hover:bg-white/[0.04] transition-all duration-700 cursor-pointer relative overflow-hidden glow-card border border-white/[0.05] active:scale-[0.98]"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-400/[0.03] blur-3xl -mr-16 -mt-16 group-hover:bg-cyan-400/[0.08] transition-colors" />

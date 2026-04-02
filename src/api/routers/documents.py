@@ -41,7 +41,7 @@ async def upload_document(
         raise BadRequestException(f"Subject with ID {subject_id} not found")
     
     # Validate file type
-    is_valid, file_type = validate_file_type(file.filename or "")
+    is_valid, file_type = validate_file_type(file)
     if not is_valid:
         raise BadRequestException(
             f"Unsupported file type. Allowed: PDF, DOCX, PPT, PNG, JPG"

@@ -1,3 +1,19 @@
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  full_name?: string;
+  created_at: string;
+  is_active: boolean;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+}
+
 export interface Subject {
   id: string;
   name: string;
